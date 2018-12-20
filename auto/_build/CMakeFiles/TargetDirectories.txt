@@ -1,0 +1,7 @@
+/home/yunusemre/Desktop/autonomous/_build/CMakeFiles/install/strip.dir
+/home/yunusemre/Desktop/autonomous/_build/CMakeFiles/edit_cache.dir
+/home/yunusemre/Desktop/autonomous/_build/CMakeFiles/install.dir
+/home/yunusemre/Desktop/autonomous/_build/CMakeFiles/auto.dir
+/home/yunusemre/Desktop/autonomous/_build/CMakeFiles/rebuild_cache.dir
+/home/yunusemre/Desktop/autonomous/_build/CMakeFiles/list_install_components.dir
+/home/yunusemre/Desktop/autonomous/_build/CMakeFiles/install/local.dir

@@ -1,8 +1,8 @@
 FLAGS := -g -ansi -pedantic -Wall --std=c++11  
-HDR   := header
 SRCS := source/Server.cpp source/Client.cpp source/AbstractCommunication.cpp Taslak_Main/driver.cpp
 OBJS := $(SRCS:.cpp=.o)
 DEPS := $(SRCS:.cpp=.d)
+BIN  := binaries
 
 .PHONY: all clean
 

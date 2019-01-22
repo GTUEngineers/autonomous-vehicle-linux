@@ -214,7 +214,7 @@ input_test() {
         }while(st==ErrorStatus::Success && clientM!="end");
 
         if(client!=nullptr){
-            delete client;  
+            delete client;
             client = nullptr;
         }
     }

@@ -38,6 +38,7 @@ void loop()
   }
   
   if(Serial.available() > 0){
+    String incomingByte;
        if(selection_flag == 1){
           incomingByte = Serial.readString();
           select_val = incomingByte.toInt();
@@ -56,7 +57,7 @@ void loop()
           }
       }
       else{
-        if(selection_flag == 2{
+        if(selection_flag == 2){
           if(select_val == 0){
             incomingByte = Serial.readString();
             steerTo(incomingByte.toInt());

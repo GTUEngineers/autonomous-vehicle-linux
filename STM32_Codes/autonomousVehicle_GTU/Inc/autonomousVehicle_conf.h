@@ -15,7 +15,8 @@
 
 #define THROTTLE_MIN_VOLTAGE (0.4)
 #define THROTTLE_MAX_VOLTAGE (1.8)
-#define STEERING_MAX_VALUE (7500)
+#define STEERING_MAX_RIGHT_VALUE (7500)
+#define STEERING_MAX_LEFT_VALUE (-7500)
 /*------------------------------< Typedefs >----------------------------------*/
 struct s_PinSettings
 {

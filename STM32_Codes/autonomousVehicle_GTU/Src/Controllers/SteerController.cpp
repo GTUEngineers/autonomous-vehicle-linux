@@ -9,17 +9,31 @@
 /*------------------------------< Includes >----------------------------------*/
 #include "SteerController.h"
 #include "autonomousVehicle_conf.h"
-#include "cmsis_os.h"
+#include "dwt_delay.h"
 /*------------------------------< Defines >-----------------------------------*/
 
 /*------------------------------< Typedefs >----------------------------------*/
 
 /*------------------------------< Namespaces >--------------------------------*/
 
+SteerController::SteerController()
+{
+	steer_mutex = xSemaphoreCreateMutex();
+}
+
+SteerController::~SteerController()
+{
+	vSemaphoreDelete(steer_mutex);
+}
+
 void SteerController::set_value (int val)
 {
+	if(val > STEERING_MAX_RIGHT_VALUE || val < STEERING_MAX_LEFT_VALUE)
+		return;
+
+	xSemaphoreTake( steer_mutex, portMAX_DELAY );
     int dir_val = 0;
-    if(last_position > val)
+    if(get_encoder_value() > val)
         dir_val = 1;
     //sets STEER_DIRECTION_PIN_CONF according to dir_val
     switch(dir_val){
@@ -33,6 +47,7 @@ void SteerController::set_value (int val)
             break;
     }
     last_position = val;
+    xSemaphoreGive( steer_mutex);
 }
 
 int SteerController::get_value ( )
@@ -47,18 +62,17 @@ float SteerController::get_encoder_value ( )
 
 void SteerController::steer_task ( )
 {
-    while (false)
+	DWT_Init();
+	int count = get_encoder_value();
+    while (1)
     {
+    	xSemaphoreTake( steer_mutex, portMAX_DELAY );
 		while(get_value() != get_encoder_value()){
-			HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_RESET);
-			DWT_Delay(150);// HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
-			HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_SET);
-			DWT_Delay(150);//HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
-			if(HAL_GPIO_ReadPin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin) == 1)
-				set_value(get_value() - 1);
-			else
-				set_value(get_value() + 1);
+			pulse();
+			xSemaphoreGive( steer_mutex);
+			xSemaphoreTake( steer_mutex, portMAX_DELAY );
 		}
+		xSemaphoreGive( steer_mutex);
     };
 }
 
@@ -71,9 +85,9 @@ void SteerController::test ( )
 	for(int i=0; i<STEERING_MAX_VALUE; ++i)
 	{
 		HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_RESET);
-		DWT_Delay(150);//HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
+		DWT_Delay(150);
 		HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_SET);
-		DWT_Delay(150);//HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
+		DWT_Delay(150);
 	}
 			
 	// wait 1 second
@@ -84,9 +98,9 @@ void SteerController::test ( )
 	for(int i=0; i<STEERING_MAX_VALUE; ++i)
 	{
 		HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_RESET);
-		DWT_Delay(150);//HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
+		DWT_Delay(150);
 		HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_SET);
-		DWT_Delay(150);//HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
+		DWT_Delay(150);
 	}
 			
 	// wait 1 second
@@ -97,9 +111,9 @@ void SteerController::test ( )
 	for(int i=0; i<STEERING_MAX_VALUE; ++i)
 	{
 		HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_RESET);
-		DWT_Delay(150);//HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
+		DWT_Delay(150);
 		HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_SET);
-		DWT_Delay(150);//HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
+		DWT_Delay(150);
 	}
 
 	// wait 1 second
@@ -110,11 +124,19 @@ void SteerController::test ( )
 	for(int i=0; i<STEERING_MAX_VALUE; ++i)
 	{
 		HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_RESET);
-		DWT_Delay(150);//HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
+		DWT_Delay(150);
 		HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_SET);
-		DWT_Delay(150);//HAL_Delay(1); //delayMicroseconds(150); // micros() for non-blocking code
+		DWT_Delay(150);
 	}
 	
 	// wait 1 second
 	HAL_Delay(1000);
+}
+
+void SteerController::pulse()
+{
+	HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_RESET);
+	DWT_Delay(150);
+	HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin,GPIO_PIN_SET);
+	sDWT_Delay(150);
 }

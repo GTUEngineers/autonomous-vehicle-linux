@@ -46,7 +46,7 @@ void steer_set_value (int val)
 
     xSemaphoreTake(steer_mutex, portMAX_DELAY);
     int dir_val = 0;
-    if (get_encoder_value( ) > val)
+    if (steer_get_encoder_value( ) > val)
         dir_val = 1;
     //sets STEER_DIRECTION_PIN_CONF according to dir_val
     switch (dir_val)
@@ -80,7 +80,7 @@ void steer_task ( )
     while (1)
     {
         xSemaphoreTake(steer_mutex, portMAX_DELAY);
-        while (get_value( ) != get_encoder_value( ))
+        while (steer_get_value( ) != steer_get_encoder_value( ))
         {
             steer_pulse( );
             xSemaphoreGive(steer_mutex);

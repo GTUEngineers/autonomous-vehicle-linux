@@ -23,7 +23,7 @@
 int last_position;
 SemaphoreHandle_t steer_mutex;
 /*------------------------------< Prototypes >--------------------------------*/
-void pulse ( );
+void steer_pulse ( );
 void steer_task ( );
 /*------------------------------< Functions >---------------------------------*/
 
@@ -32,14 +32,14 @@ void steer_construct ( )
     steer_mutex = xSemaphoreCreateMutex();
 }
 
-void steer_deconstruct ( )
+void steer_destruct ( )
 {
     vSemaphoreDelete(steer_mutex);
 }
 //steer_mutex = xSemaphoreCreateMutex();
 //vSemaphoreDelete(steer_mutex);
 
-void set_value (int val)
+void steer_set_value (int val)
 {
     if (val > STEERING_MAX_VALUE || val < -STEERING_MAX_VALUE)
         return;
@@ -64,11 +64,11 @@ void set_value (int val)
     xSemaphoreGive(steer_mutex);
 }
 
-int get_value ( )
+int steer_get_value ( )
 {
     return last_position;
 }
-float get_encoder_value ( )
+float steer_get_encoder_value ( )
 {
     return 0.0;
 }
@@ -82,7 +82,7 @@ void steer_task ( )
         xSemaphoreTake(steer_mutex, portMAX_DELAY);
         while (get_value( ) != get_encoder_value( ))
         {
-            pulse( );
+            steer_pulse( );
             xSemaphoreGive(steer_mutex);
             xSemaphoreTake(steer_mutex, portMAX_DELAY);
         }
@@ -90,7 +90,7 @@ void steer_task ( )
     };
 }
 
-void test ( )
+void steer_test ( )
 {
     //RELOCATE this function call
     DWT_Init( );
@@ -99,7 +99,7 @@ void test ( )
             GPIO_PIN_RESET);
     for (int i = 0; i < STEERING_MAX_VALUE; ++i)
     {
-        pulse( );
+        steer_pulse( );
     }
 
     // wait 1 second
@@ -110,7 +110,7 @@ void test ( )
             GPIO_PIN_SET);
     for (int i = 0; i < STEERING_MAX_VALUE; ++i)
     {
-        pulse( );
+        steer_pulse( );
     }
 
     // wait 1 second
@@ -121,7 +121,7 @@ void test ( )
             GPIO_PIN_SET);
     for (int i = 0; i < STEERING_MAX_VALUE; ++i)
     {
-        pulse( );
+        steer_pulse( );
     }
 
     // wait 1 second
@@ -131,14 +131,14 @@ void test ( )
             GPIO_PIN_RESET);
     for (int i = 0; i < STEERING_MAX_VALUE; ++i)
     {
-        pulse( );
+        steer_pulse( );
     }
 
     // wait 1 second
     osDelay(1000);
 }
 
-void pulse ( )
+void steer_pulse ( )
 {
     HAL_GPIO_WritePin(STEER_PULSE_PIN_CONF.GPIOx, STEER_PULSE_PIN_CONF.GPIO_Pin, GPIO_PIN_RESET);
     DWT_Delay(150);

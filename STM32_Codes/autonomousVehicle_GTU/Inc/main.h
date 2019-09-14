@@ -83,6 +83,9 @@ void Error_Handler(void);
 #define PH1_OSC_OUT_GPIO_Port GPIOH
 #define B1_Pin GPIO_PIN_0
 #define B1_GPIO_Port GPIOA
+#define STEER_CONFIG_Pin GPIO_PIN_3
+#define STEER_CONFIG_GPIO_Port GPIOA
+#define STEER_CONFIG_EXTI_IRQn EXTI3_IRQn
 #define THROTTLE_VOLTAGE_Pin GPIO_PIN_5
 #define THROTTLE_VOLTAGE_GPIO_Port GPIOA
 #define BOOT1_Pin GPIO_PIN_2

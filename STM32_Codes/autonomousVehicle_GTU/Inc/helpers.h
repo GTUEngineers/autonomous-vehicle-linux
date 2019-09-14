@@ -9,4 +9,5 @@ void set_green_led (GPIO_PinState PinState);
 void set_orange_led (GPIO_PinState PinState);
 void emergency_stop ( );
 void start_system ( );
+void configure_steer ( );
 #endif

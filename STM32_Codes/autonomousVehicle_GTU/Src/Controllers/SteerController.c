@@ -22,13 +22,34 @@
 int32_t position;
 /*------------------------------< Prototypes >--------------------------------*/
 
+void configure_steer_position ( );
 /*------------------------------< Functions >---------------------------------*/
 
 void steer_init ( )
 {
     position = 0;
-
+   configure_steer_position( );
     //call configure
+}
+
+void configure_steer_position ( )
+{
+    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_3);
+    HAL_TIM_Base_Stop(&htim3);     //check it
+    HAL_GPIO_WritePin(STEER_DIR_GPIO_Port, STEER_DIR_Pin, GPIO_PIN_RESET);
+    int i = 0;
+    while (i < 1000)
+    {
+        ++i;
+    }
+    position = 7500;
+    TIM3->ARR = (2 * STEERING_MAX_VALUE - 1) * 2;     // max val * 2
+
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+    HAL_TIM_Base_Start_IT(&htim3);
+
+    osDelay(6000);
+    steer_set_value(-7500);
 }
 
 void steer_set_value (int val)
@@ -49,7 +70,8 @@ void steer_set_value (int val)
         HAL_GPIO_WritePin(STEER_DIR_GPIO_Port, STEER_DIR_Pin, GPIO_PIN_RESET);
     }
     int i = 0;
-    while(i<1000){
+    while (i < 1000)
+    {
         ++i;
     }
     uint32_t abs_val = abs(position - val);

@@ -186,6 +186,20 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles EXTI line3 interrupt.
+  */
+void EXTI3_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI3_IRQn 0 */
+
+  /* USER CODE END EXTI3_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+  /* USER CODE BEGIN EXTI3_IRQn 1 */
+
+  /* USER CODE END EXTI3_IRQn 1 */
+}
+
+/**
   * @brief This function handles EXTI line[9:5] interrupts.
   */
 void EXTI9_5_IRQHandler(void)
@@ -278,6 +292,22 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
 
             break;
         }
+        case STEER_CONFIG_Pin:
+         {
+
+             if (HAL_GPIO_ReadPin(STEER_CONFIG_GPIO_Port, STEER_CONFIG_Pin) == GPIO_PIN_SET)
+             {
+                 it_callback = &configure_steer;
+                 HAL_TIM_Base_Start_IT(&htim4);
+             }
+             else
+             {
+                 HAL_TIM_Base_Stop(&htim4);
+                 it_callback = NULL;
+             }
+
+             break;
+         }
     }
 }
 /* USER CODE END 1 */

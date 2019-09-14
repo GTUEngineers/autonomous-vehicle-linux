@@ -394,7 +394,7 @@ static void MX_TIM4_Init (void)
     htim4.Instance = TIM4;
     htim4.Init.Prescaler = 52500;
     htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim4.Init.Period = 400;
+    htim4.Init.Period = 200;
     htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
@@ -513,6 +513,12 @@ static void MX_GPIO_Init (void)
     GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
+    /*Configure GPIO pin : STEER_CONFIG_Pin */
+    GPIO_InitStruct.Pin = STEER_CONFIG_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    HAL_GPIO_Init(STEER_CONFIG_GPIO_Port, &GPIO_InitStruct);
+
     /*Configure GPIO pin : BOOT1_Pin */
     GPIO_InitStruct.Pin = BOOT1_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -561,6 +567,9 @@ static void MX_GPIO_Init (void)
     HAL_GPIO_Init(MEMS_INT2_GPIO_Port, &GPIO_InitStruct);
 
     /* EXTI interrupt init*/
+    HAL_NVIC_SetPriority(EXTI3_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
     HAL_NVIC_SetPriority(EXTI9_5_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
@@ -615,8 +624,8 @@ void StartDefaultTask (void const * argument)
         //set_blue_led();
         osDelay(3000);
         //brake_test( );
-        throttle_test( );
-        //steer_test( );
+        //throttle_test( );
+        steer_test( );
         //hcsr04( );
 #endif
 #if DEBUG_LOG

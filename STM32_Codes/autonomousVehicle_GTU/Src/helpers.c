@@ -55,3 +55,11 @@ void start_system ( )
         set_green_led(GPIO_PIN_SET);
     }
 }
+
+void configure_steer ( )
+{
+    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_3);
+    HAL_TIM_Base_Stop(&htim2);
+    HAL_TIM_Base_Stop(&htim3);
+    HAL_GPIO_WritePin(STEER_PWM_GPIO_Port, STEER_PWM_Pin, GPIO_PIN_RESET);
+}

@@ -268,6 +268,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
             if (HAL_GPIO_ReadPin(START_BUTTON_GPIO_Port, START_BUTTON_Pin) == GPIO_PIN_SET)
             {
                 it_callback = &start_system;
+                TIM4->CNT = 0;
                 TIM4->ARR=300;
                 HAL_TIM_Base_Start_IT(&htim4);
                 set_orange_led(GPIO_PIN_SET);
@@ -287,6 +288,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
             if (HAL_GPIO_ReadPin(EMERGENCY_STOP_GPIO_Port, EMERGENCY_STOP_Pin) == GPIO_PIN_RESET)
             {
                 it_callback_2 = &emergency_stop;
+                TIM7->CNT = 0;
                 TIM7->ARR=300;
                 HAL_TIM_Base_Start_IT(&htim7);
                 set_blue_led(GPIO_PIN_SET);

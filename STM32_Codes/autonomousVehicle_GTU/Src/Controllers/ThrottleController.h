@@ -1,6 +1,6 @@
 /**
  * \file        ThrottleController.h
- * \brief       A brief description one line.
+ * \brief       ThrottleController.c de gerekli bilgi yazmaktadır.
  *
  * \author      ahmet.alperen.bulut
  * \date        Jul 5, 2019

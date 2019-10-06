@@ -27,7 +27,6 @@
 #include "Controllers/BrakeController.h"
 #include "Controllers/ThrottleController.h"
 #include "Controllers/SteerController.h"
-#include "Sensors/hcsr04.h"
 #include "Communications/Communication_Mechanism.h"
 #include "Communications/UART_Communication.h"
 #include "Communications/UART_Message.h"
@@ -65,9 +64,6 @@ UART_HandleTypeDef huart2;
 osThreadId defaultTaskHandle;
 uint32_t defaultTaskBuffer[512];
 osStaticThreadDef_t defaultTaskControlBlock;
-osThreadId ControlHandle;
-uint32_t ControlBuffer[512];
-osStaticThreadDef_t ControlControlBlock;
 /* USER CODE BEGIN PV */
 volatile uint8_t is_started;
 volatile void (*it_callback) ( ) = NULL;
@@ -84,7 +80,6 @@ static void MX_USART2_UART_Init (void);
 static void MX_TIM4_Init (void);
 static void MX_TIM7_Init (void);
 void StartDefaultTask (void const * argument);
-void ControlTask (void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -156,14 +151,9 @@ int main (void)
 
     /* Create the thread(s) */
     /* definition and creation of defaultTask */
-    /*
-     osThreadStaticDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 512, defaultTaskBuffer, &defaultTaskControlBlock);
-     defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-     */
-    /* definition and creation of Control */
-    osThreadStaticDef(Control, ControlTask, osPriorityAboveNormal, 0, 512, ControlBuffer,
-            &ControlControlBlock);
-    ControlHandle = osThreadCreate(osThread(Control), NULL);
+    osThreadStaticDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 512, defaultTaskBuffer,
+            &defaultTaskControlBlock);
+    defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
     /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
@@ -173,6 +163,7 @@ int main (void)
     uart_init( );
     steer_init( );
     communication_init( );
+
     /* USER CODE END RTOS_THREADS */
 
     /* Start scheduler */
@@ -525,8 +516,8 @@ static void MX_GPIO_Init (void)
     HAL_GPIO_WritePin(THROTTLE_LOCK_GPIO_Port, THROTTLE_LOCK_Pin, GPIO_PIN_SET);
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(GPIOD, LD4_Pin | LD3_Pin | LD5_Pin | LD6_Pin | Audio_RST_Pin | BRAKE_RELAY_2_Pin,
-            GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOD,
+    LD4_Pin | LD3_Pin | LD5_Pin | LD6_Pin | Audio_RST_Pin | BRAKE_RELAY_2_Pin, GPIO_PIN_RESET);
 
     /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(BRAKE_RELAY_1_GPIO_Port, BRAKE_RELAY_1_Pin, GPIO_PIN_RESET);
@@ -567,7 +558,7 @@ static void MX_GPIO_Init (void)
     GPIO_InitStruct.Pin = STEER_DIR_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(STEER_DIR_GPIO_Port, &GPIO_InitStruct);
 
     /*Configure GPIO pins : LD4_Pin LD3_Pin LD5_Pin LD6_Pin
@@ -657,7 +648,7 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef *htim)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask (void const * argument)
 {
-    
+
     /* USER CODE BEGIN 5 */
     /* Infinite loop */
 #if DEBUG_LOG == 0
@@ -693,182 +684,6 @@ void StartDefaultTask (void const * argument)
 #endif
     }
     /* USER CODE END 5 */
-}
-
-/* USER CODE BEGIN Header_ControlTask */
-/**
- * @brief Function implementing the Control thread.
- * @param argument: Not used
- * @retval None
- */
-/* USER CODE END Header_ControlTask */
-void ControlTask (void const * argument)
-{
-    /* USER CODE BEGIN ControlTask */
-    /* Infinite loop */
-    uart_message_req req;
-
-    uint8_t msg_header;
-    uint8_t ret_val = 0;
-    for (;;)
-    {
-        uart_message_rep rep = { 0 };
-
-        if (communication_get_msg(&req) == OK)
-        {
-            msg_header = (req.req.msg[0] & 0b11110000) >> 4;
-            switch (msg_header)
-            {
-                case 0x0:
-                {
-                    uint8_t val = 0;
-
-                    parse_startstop_msg(&req, &val);
-
-                    if (val == 1)
-                    {
-                        if (HAL_GPIO_ReadPin(EMERGENCY_STOP_GPIO_Port, EMERGENCY_STOP_Pin)
-                                == GPIO_PIN_SET)
-                        {
-                            start_system( );
-                            ret_val = 1;
-                        }
-
-                    }
-                    else if (val == 0)
-                    {
-                        emergency_stop( );
-                    }
-
-                    break;
-                }
-                case 0x1:
-                {
-                    if (is_started == 1)
-                    {
-                        uint8_t dir;
-                        int16_t val;
-                        parse_steer_msg(&req, &dir, &val);
-                        if (dir == 0)
-                        {
-                            val = val * 7;
-                        }
-                        else
-                        {
-                            val = val * 7 * -1;
-                        }
-                        steer_set_value(val);
-                        ret_val = 1;
-                    }
-                    else
-                    {
-                        ret_val = 0;
-                    }
-                    break;
-                }
-                case 0x2:
-                {
-                    if (is_started == 1)
-                    {
-                        uint8_t val;
-                        parse_throttle_msg(&req, &val);
-                        switch (val)
-                        {
-                            case 0:
-                            {
-                                throttle_set_value(SPEED_0);
-                                break;
-                            }
-                            case 5:
-                            {
-                                throttle_set_value(SPEED_5);
-                                break;
-                            }
-                            case 8:
-                            {
-                                throttle_set_value(SPEED_8);
-                                break;
-                            }
-                            case 10:
-                            {
-                                throttle_set_value(SPEED_10);
-                                break;
-                            }
-                            case 13:
-                            {
-                                throttle_set_value(SPEED_13);
-                                break;
-                            }
-                            case 15:
-                            {
-                                throttle_set_value(SPEED_15);
-                                break;
-                            }
-                            case 20:
-                            {
-                                throttle_set_value(SPEED_20);
-                                break;
-                            }
-                            default:
-                            {
-
-                                throttle_set_value(SPEED_0);
-                                break;
-                            }
-
-                        }
-                        ret_val = 1;
-                    }
-                    else
-                    {
-                        ret_val = 0;
-                    }
-                    break;
-                }
-                case 0x3:
-                {
-                    if (is_started == 1)
-                    {
-                        uint8_t val;
-                        parse_brake_msg(&req, &val);
-                        if (val == 0)
-                        {
-                            brake_set_value(BRAKE_RELEASE);
-                        }
-                        else if (val == 1)
-                        {
-                            throttle_set_lock(THROTTLE_LOCK);
-                            brake_set_value(BRAKE_LOCK);
-                        }
-                        ret_val = 1;
-                    }
-                    else
-                    {
-                        ret_val = 0;
-                    }
-                    break;
-                }
-                case 0x4:
-                {
-                    ret_val = is_started;
-                    break;
-                }
-                default:
-                {
-                    //LOGGER
-                    break;
-                }
-            }
-
-        }
-        else
-        {
-        }
-        create_general_rep_msg(&rep, ret_val);
-        communication_send_msg(&rep);
-
-    }
-    /* USER CODE END ControlTask */
 }
 
 /**

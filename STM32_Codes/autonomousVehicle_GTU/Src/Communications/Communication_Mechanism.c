@@ -1,7 +1,10 @@
 /**
  * \file        Communication_Mechanism.c
- * \brief       A brief description one line.
+ * \brief       Communication Mekanizmasında iki thread bulunmaktadır.
+ * 				Bunların birtanesi Transmit edilecek veriyi gönderir.
+ * 				Diğeri ise Gelen verileri queue koyar.
  *
+ * *  Detaylı bilgi için Ahmet Alperen BULUT https://www.linkedin.com/in/ahmetalperenbulut
  * \author      ahmet.alperen.bulut
  * \date        Aug 17, 2019
  */
